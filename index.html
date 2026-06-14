@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometry API | Cloud Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        select, input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .dimensions-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .dimensions-group.active {
+            display: grid;
+        }
+
+        .dimensions-group.single {
+            grid-template-columns: 1fr;
+        }
+
+        button {
+            width: 100%;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px rgba(99, 102, 241, 0.6);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .result-card {
+            margin-top: 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .result-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-title {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #10b981;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Geometry API</h1>
+            <p>Cloud-Native Area Calculator</p>
+        </div>
+
+        <div class="form-group">
+            <label for="shape">Select Shape</label>
+            <select id="shape" onchange="updateFields()">
+                <option value="" disabled selected>Choose a geometry...</option>
+                <option value="circle">Circle</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="triangle">Triangle</option>
+            </select>
+        </div>
+
+        <div class="form-group dimensions-group single" id="circle-fields">
+            <div>
+                <label for="radius">Radius</label>
+                <input type="number" id="radius" placeholder="Enter radius" step="0.1" min="0">
+            </div>
+        </div>
+
+        <div class="form-group dimensions-group" id="rectangle-fields">
+            <div>
+                <label for="length">Length</label>
+                <input type="number" id="length" placeholder="Enter length" step="0.1" min="0">
+            </div>
+            <div>
+                <label for="width">Width</label>
+                <input type="number" id="width" placeholder="Enter width" step="0.1" min="0">
+            </div>
+        </div>
+
+        <div class="form-group dimensions-group" id="triangle-fields">
+            <div>
+                <label for="base">Base</label>
+                <input type="number" id="base" placeholder="Enter base" step="0.1" min="0">
+            </div>
+            <div>
+                <label for="height">Height</label>
+                <input type="number" id="height" placeholder="Enter height" step="0.1" min="0">
+            </div>
+        </div>
+
+        <button onclick="calculateArea()">Calculate Area</button>
+        
+        <div class="loading" id="loader">
+            <div class="spinner"></div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+            <div class="result-title">Calculated Area</div>
+            <div class="result-value" id="resultValue">0.00</div>
+        </div>
+    </div>
+
+    <script>
+        // Note: Change this URL to your Azure Function URL after deployment
+        // Example: https://sba-calculate-area.azurewebsites.net/api/CalculateArea
+        const API_URL = "http://localhost:7071/api/CalculateArea"; 
+
+        function updateFields() {
+            const shape = document.getElementById('shape').value;
+            
+            document.getElementById('circle-fields').classList.remove('active');
+            document.getElementById('rectangle-fields').classList.remove('active');
+            document.getElementById('triangle-fields').classList.remove('active');
+            
+            document.getElementById('resultCard').classList.remove('show');
+
+            if (shape === 'circle') {
+                document.getElementById('circle-fields').classList.add('active');
+            } else if (shape === 'rectangle') {
+                document.getElementById('rectangle-fields').classList.add('active');
+            } else if (shape === 'triangle') {
+                document.getElementById('triangle-fields').classList.add('active');
+            }
+        }
+
+        async function calculateArea() {
+            const shape = document.getElementById('shape').value;
+            if (!shape) {
+                alert("Please select a shape first.");
+                return;
+            }
+
+            let payload = { shape: shape };
+
+            if (shape === 'circle') {
+                const radius = document.getElementById('radius').value;
+                if(!radius) return alert("Please enter radius");
+                payload.radius = parseFloat(radius);
+            } else if (shape === 'rectangle') {
+                const length = document.getElementById('length').value;
+                const width = document.getElementById('width').value;
+                if(!length || !width) return alert("Please enter all dimensions");
+                payload.length = parseFloat(length);
+                payload.width = parseFloat(width);
+            } else if (shape === 'triangle') {
+                const base = document.getElementById('base').value;
+                const height = document.getElementById('height').value;
+                if(!base || !height) return alert("Please enter all dimensions");
+                payload.base = parseFloat(base);
+                payload.height = parseFloat(height);
+            }
+
+            document.getElementById('resultCard').classList.remove('show');
+            document.getElementById('loader').classList.add('active');
+
+            try {
+                // In Version 1 (Monolith), the API might not be ready yet.
+                // We will try fetching, but if it fails, we catch the error.
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error("API responded with an error");
+                }
+                
+                const data = await response.json();
+                
+                document.getElementById('resultValue').innerText = data.area ? data.area.toFixed(2) : "Error";
+                document.getElementById('resultValue').style.color = "#10b981";
+                
+            } catch (error) {
+                console.warn("Backend API not connected yet (Version 1). Simulating result locally.");
+                // Fallback simulation for V1 frontend before V2 backend is live
+                let area = 0;
+                if (shape === 'circle') area = Math.PI * Math.pow(payload.radius, 2);
+                if (shape === 'rectangle') area = payload.length * payload.width;
+                if (shape === 'triangle') area = 0.5 * payload.base * payload.height;
+                
+                document.getElementById('resultValue').innerText = area.toFixed(2);
+                document.getElementById('resultValue').style.color = "#8b5cf6"; // Different color to indicate mock
+            } finally {
+                document.getElementById('loader').classList.remove('active');
+                document.getElementById('resultCard').classList.add('show');
+            }
+        }
+    </script>
+</body>
+</html>
